@@ -4,7 +4,7 @@
 import sqlite3
 import requests
 from bs4 import BeautifulSoup
-import time
+#import time
 
 def get_data(url,i):
     req = requests.get(url, i)
@@ -15,22 +15,34 @@ def get_data(url,i):
             #print (j)
         year = str(i)
         province = table[0].find("b").string
-        crop = table[6].string
         type_db = table[3].string
+        crop = table[6].string
         account = str(table[7].string)
-        return year, province, crop, type_db, account
+        push_data(year, province, crop, type_db, account)
     except:
         return False
 
+def push_data(year, province, crop, type_db, account):
+    conn = sqlite3.connect('/home/asitin/farming/farming/db.sqlite3')
+    cur = conn.cursor()
+    try:
+        cur.execute('INSERT INTO mysite_farmdata (year,province,crop,type_db,account) VALUES (?,?,?,?,?)',(year,province,crop,type_db,account))
+        conn.commit()
+        cur.close()
+        conn.close()
+    except sqlite3.Error as e:
+        print ('error!', e.args[0])
+
+
 if __name__ == "__main__":
     for i in range(1949, 2016):
-        url = "http://202.127.42.157/moazzys/nongqing_result.aspx?year={}&prov=11%20%20%20&item=02&type=1&radio=1&order1=year_code&order2=prov_code&order3=item_code".format(i)
-        result = get_data(url, i)
-        if result:
-            print(result)
-        else:
-            print("haha")
-        time.sleep(1)
+        for j in range(11, 66):
+            for k in range(2, 45):
+                for v in range(1, 4):
+                    url = "http://202.127.42.157/moazzys/nongqing_result.aspx?year={0}&prov={1}%20%20%20&item={2}&type={3}&radio=1&order1=year_code&order2=prov_code&order3=item_code".format(i, j, k, v)
+                    get_data(url, i)
 
 
-    #conn = sqlite3.connect('/home/asitin/farming/farming/db.sqlite3')
+
+
+    
